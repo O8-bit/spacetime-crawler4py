@@ -154,22 +154,3 @@ def is_valid(url):
     except TypeError:
         print ("TypeError for ", parsed)
         raise
-
-
-'''
-#answering no 2
-def no2(url, html):
-    text = html.get_text().split()
-    words = []
-    global longestPage
-    for t in text:
-        if t!="" and t.isalnum() and "[]" not in t:
-            words.append(t)
-    if len(words) > longestPage:
-        longestPage = len(words)
-        with open("longest.txt", "w", encoding="utf-8") as file:
-            file.write(url+"\n")
-            file.write(html.get_text())
-        file.close()
-	
-'''
