@@ -1,33 +1,37 @@
 import re
-from urllib.parse import urlparse, urldefrag
+from urllib.parse import urlparse,urldefrag
 import urllib
 from bs4 import BeautifulSoup
 import operator
 
+#this is a set of crawled urls
 already_crawled = set()
-
-longestPage = 0
-
+#variable for no 2
+longestPage= 0
+#dict for no 3
 wordDict = {}
-content = {}
-longestPage = {}
-
+content={}
+longestPage={}
+#this function receives a URL and corresponding web response
+#(for example, the first one will be "http://www.ics.uci.edu" and the Web response will contain the page itself).
 def scraper(url, resp):
     links = extract_next_links(url, resp)
+    #return the list of URLs "scapped" from that page
     return [link for link in links if is_valid(link)]
+
 
 def extract_next_links(url, resp):
     # Implementation requred.
     outputLinks = list()
     parsed = urlparse(url)
-    domain = "https://" + parsed.netloc
+    domain = "https://"+parsed.netloc
     words = []
-
+    #writing urls into .txt files
     with open("url.txt", "a", encoding="utf-8") as file, \
          open("content.txt", "a", encoding="utf-8") as file2, \
          open("longest.txt","a",encoding="utf-8") as file3:
-        
-        #checks for valid url and response status
+
+	#checks for valid url and response status
         if is_valid(url) and 200<=resp.status<=202 and checkIfAlreadyCrawled(url):
             html_doc = resp.raw_response.content
             soup = BeautifulSoup(html_doc, 'html.parser')
@@ -46,21 +50,24 @@ def extract_next_links(url, resp):
                 link = urllib.parse.urljoin(domain, relative)
                 outputLinks.append(urldefrag(link)[0])
                 file.write(urldefrag(link)[0]+"\n")
-
+                
     file.close()
     file2.close()
     file3.close()
-
     return outputLinks
 
+
+#function to check if the url is crawled already
 def checkIfAlreadyCrawled(url):
-    if url[-1] == "/":
-        url = url[:-1]
-    if url not in already_crawled:
+    if url[-1]=="/":
+	    url = url[:-1]
+    if url not in already_crawled:  
         already_crawled.add(url)
         return True
     return False
 
+
+#function to check if url netloc matches url domains we are allowed to crawl
 def checkDomain(url):
     
     valids = ["ics.uci.edu","cs.uci.edu", "stat.uci.edu",
@@ -103,16 +110,20 @@ def checkDomain(url):
         if subdomain == domain:
             return True
 
+
 def is_valid(url):
     try:
+        #check if it is within the domains and paths (*.ics.uci.edu/*, *.cs.uci.edu/*, *.informatics.uci.edu/*, *.stat.uci.edu/*, 
+        #today.uci.edu/department/information_computer_sciences/* )
         parsed = urlparse(url)
-
+        
+        #replaced with helper function to deal with netloc match
         if not checkDomain(parsed):
             return False
-
+        
         if parsed.scheme not in set(["http", "https"]):
             return False
-
+        
         dontCrawled =["css","js","bmp","gif","jpeg","ico","png","tiff",
                       "mid","mp2","mp3","mp4","wav","avi","mov","mpeg","ram",
                       "m4v","mkv","ogg","ogv","pdf","ps","eps","tex","ppt",
@@ -126,7 +137,8 @@ def is_valid(url):
         for n in dontCrawled:
             if (n) in parsed.query or (n) in parsed.path:
                 return False
-            
+
+
         return not re.match(
             r".*\.(css|js|bmp|gif|jpe?g|ico"
             + r"|png|tiff?|mid|mp2|mp3|mp4"
