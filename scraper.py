@@ -53,9 +53,62 @@ def extract_next_links(url, resp):
 
     return outputLinks
 
+def checkIfAlreadyCrawled(url):
+    if url[-1] == "/":
+        url = url[:-1]
+    if url not in already_crawled:
+        already_crawled.add(url)
+        return True
+    return False
+
+def checkDomain(url):
+    
+    valids = ["ics.uci.edu","cs.uci.edu", "stat.uci.edu",
+              "informatics.uci.edu"]
+
+    netloc = url.netloc
+
+    if netloc.startswith("www."):
+        netloc = netloc.strip("www.")
+
+    netlist = netloc.split(".")
+
+    subdomain = ".".join(netlist)
+        
+    if len(netlist) >= 4:
+        subdomain = ".".join(netlist[1:])
+
+    if netloc == "today.uci.edu" and \
+       "/department/information_computer_sciences" in url.path:
+        return True
+    
+    if netloc == "wics.ics.uci.edu" and \
+       "/events" in url.path:
+        return False
+
+    if netloc == "archive.ics.uci.edu":
+        return False
+
+    if netloc == "hack.ics.uci.edu" and \
+       "gallery" in url.path:
+        return False
+
+    if netloc == "grape.ics.uci.edu":
+        return False
+
+    if netloc == "intranet.ics.uci.edu":
+        return False
+
+    for domain in valids:
+        if subdomain == domain:
+            return True
+
 def is_valid(url):
     try:
         parsed = urlparse(url)
+
+        if not checkDomain(parsed):
+            return False
 
         if parsed.scheme not in set(["http", "https"]):
             return False
@@ -82,7 +135,9 @@ def is_valid(url):
             + r"|data|dat|exe|bz2|tar|msi|bin|7z|psd|dmg|iso"
             + r"|epub|dll|cnf|tgz|sha1"
             + r"|thmx|mso|arff|rtf|jar|csv"
-            + r"|rm|smil|wmv|swf|wma|zip|rar|gz)$", parsed.path.lower())
+            + r"|rm|smil|wmv|swf|wma|zip|rar|gz|svg"
+            + r"|txt|py|rkt|ss|scm|odc|sas|war|r|rmd"
+            + r"|ds|apk|img)$", parsed.path.lower())
 
     except TypeError:
         print ("TypeError for ", parsed)
